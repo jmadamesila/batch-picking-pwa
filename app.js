@@ -8,6 +8,8 @@ const fileEl = $('#file');
 const runBtn = $('#run');
 const storeEl = $('#store');
 const statusEl = $('#status');
+const statusWrap = $('#statusWrap');
+const progressBar = $('#progressBar');
 const preloadBtn = $('#preload');
 const openBtn = $('#open');
 const saveBtn = $('#save');
@@ -16,20 +18,22 @@ const langBtn = $('#lang');
 let lastBlobUrl = null;
 const I18N = {
   en: {
-    title:'Batch Picking Report Generator', preload:'Preload Runtime', choose:'Choose Excel', generate:'Generate', open:'Open Report', save:'Save Report Locally',
+    title:'Batch Picking Report Generator', strap:'Fast, private, on‑device report builder',
+    preload:'Preload Runtime', choose:'Open Batch Picking File (.xlsb)', generate:'Generate', open:'Open Report', save:'Save Report Locally',
     ready:'Ready', downloading:'Downloading Python runtime…', installing:'Installing packages…', processing:'Processing…', done:'Done',
     offline:'Offline: runtime not cached. Tap Preload.',
     note1:'This tool runs fully on your device (client‑only). Select your daily Batch Picking Excel (.xlsb) and tap Generate. The result opens in a new tab as a self‑contained HTML you can save to Files and view in Safari.',
     note2:'First run downloads the Python runtime (~20–30MB). Tap “Preload Runtime” once while online to cache it for offline use.',
-    note3:'Tip: For reliable offline use on iPhone, host this page over HTTPS (for example GitHub Pages). Then tap Preload Runtime once.'
+    note3:''
   },
   ja: {
-    title:'バッチピッキングレポート ジェネレーター', preload:'ランタイムを事前読み込み', choose:'Excel を選択', generate:'レポート作成', open:'レポートを開く', save:'ローカルに保存',
+    title:'バッチピッキングレポート ジェネレーター', strap:'高速・プライバシー重視・端末内で完結',
+    preload:'ランタイムを事前読み込み', choose:'バッチピッキングファイル（.xlsb）を開く', generate:'レポート作成', open:'レポートを開く', save:'ローカルに保存',
     ready:'準備完了', downloading:'Python ランタイムをダウンロード中…', installing:'パッケージをインストール中…', processing:'処理中…', done:'完了',
     offline:'オフライン：ランタイムが未キャッシュです。「ランタイムを事前読み込み」を押してください。',
     note1:'このツールは端末内のみで動作します（クライアントのみ）。毎日のバッチピッキングExcel（.xlsb）を選択し、「レポート作成」を押してください。Safariで保存・閲覧できる単独HTMLが開きます。',
     note2:'初回はPythonランタイム（約20〜30MB）をダウンロードします。オフライン利用のため、オンライン時に一度「ランタイムを事前読み込み」を行ってください。',
-    note3:'iPhoneで確実にオフライン利用するには、このページをHTTPS（例：GitHub Pages）でホストし、一度「事前読み込み」を実行してください。'
+    note3:''
   }
 };
 
@@ -67,10 +71,10 @@ function tr(key){ const d=I18N[localStorage.getItem('bpr_lang')||'en']; return d
 
 async function loadPy(preloadOnly=false) {
   if (pyodide) return pyodide;
-  status(tr('downloading'));
+  statusKey('downloading');
   await ensurePyodideGlobal();
   pyodide = await loadPyodide({indexURL: 'https://cdn.jsdelivr.net/pyodide/v0.24.1/full/'});
-  status(tr('installing'));
+  statusKey('installing');
   await pyodide.loadPackage(['pandas','micropip']);
   // Install pure-python pyxlsb
   const micropip = await pyodide.pyimport('micropip');
@@ -84,11 +88,30 @@ async function loadPy(preloadOnly=false) {
   }catch(e){ console.warn('Template fetch failed:', e); }
   const b64 = btoa(unescape(encodeURIComponent(tmpl)));
   await pyodide.runPythonAsync(PY_CODE + `\nimport base64\nTEMPLATE_HTML = base64.b64decode("${b64}").decode('utf-8')\n`);
-  status(tr('ready'));
+  statusKey('ready');
   return pyodide;
 }
 
-function status(msg){ statusEl.textContent = msg || ''; }
+function statusByText(msg){
+  if(!msg){ statusWrap?.classList.add('hidden'); return; }
+  statusEl.textContent = msg; statusWrap?.classList.remove('hidden');
+}
+
+function setProgress(pct, indet=false){
+  if(!progressBar) return;
+  progressBar.classList.toggle('indeterminate', !!indet);
+  if(!indet){ progressBar.style.width = Math.max(0, Math.min(100, pct||0)) + '%'; }
+  else { progressBar.style.width = '60%'; }
+}
+
+function statusKey(key){
+  const txt = tr(key);
+  statusByText(txt);
+  const map = { downloading:[20,true], installing:[60,true], processing:[80,true], ready:[100,false], done:[100,false], offline:[0,false] };
+  const v = map[key];
+  if(v){ setProgress(v[0], v[1]); }
+  if(key==='ready' || key==='done') setTimeout(()=> statusByText(''), 900);
+}
 
 fileEl.addEventListener('change', () => {
   runBtn.disabled = !fileEl.files?.length;
@@ -104,7 +127,7 @@ runBtn.addEventListener('click', async () => {
   const f = fileEl.files[0];
   const buf = new Uint8Array(await f.arrayBuffer());
   try {
-    runBtn.disabled = true; status(tr('processing'));
+    runBtn.disabled = true; statusKey('processing');
     const py = await loadPy();
     const store = storeEl.value.trim() || '1545';
     const pyBuf = py.toPy ? py.toPy(buf) : buf; // JS -> Python bytes
@@ -114,7 +137,7 @@ runBtn.addEventListener('click', async () => {
     try { if (pyBuf && pyBuf.destroy) pyBuf.destroy(); } catch(_){}
     lastBlobUrl = createBlobUrl(html);
     openBtn.disabled=false; saveBtn.disabled=false;
-    status(tr('done'));
+    statusKey('done');
   } catch (e){
     console.error(e); alert('Failed: ' + e);
   } finally { runBtn.disabled = false; }

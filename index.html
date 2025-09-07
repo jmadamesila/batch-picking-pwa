@@ -3,9 +3,17 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
-  <meta name="theme-color" content="#0b1220">
+  <meta name="theme-color" content="#0b1220" media="(prefers-color-scheme: dark)">
+  <meta name="theme-color" content="#f7faff" media="(prefers-color-scheme: light)">
+  <meta name="description" content="Fast, private, on-device batch picking report builder.">
+  <meta property="og:title" content="Batch Picking Report Generator">
+  <meta property="og:description" content="Fast, private, on-device batch picking report builder.">
+  <meta property="og:type" content="website">
+  <meta name="twitter:card" content="summary_large_image">
   <link rel="manifest" href="./manifest.webmanifest">
-  <title>Batch Picking Report Generator — v1</title>
+  <link rel="icon" href="./icons/favicon.svg" type="image/svg+xml">
+  <link rel="mask-icon" href="./icons/safari-pinned-tab.svg" color="#2563eb">
+  <title>Batch Picking Report Generator</title>
   <link rel="stylesheet" href="./styles.css">
   <script src="./app.js" defer></script>
 </head>
@@ -13,8 +21,8 @@
   <header class="top">
     <div class="top-inner">
       <div class="hero-left" style="text-align:center;width:100%">
-        <h1 id="title">Batch Picking Report Generator</h1>
-        <div class="strap">Fast, private, on‑device report builder</div>
+        <h1 id="title" class="title gradient-text">Batch Picking Report Generator</h1>
+        <div class="strap" data-i18n="strap">Fast, private, on‑device report builder</div>
       </div>
     </div>
   </header>
@@ -23,7 +31,7 @@
     <section class="card panel glass">
       <div class="controls">
         <div class="row row1">
-          <label class="btn btn-outline" for="file" id="chooseBtn" data-i18n="choose">Choose Excel</label>
+          <label class="btn btn-outline" for="file" id="chooseBtn" data-i18n="choose">Open Batch Picking File (.xlsb)</label>
           <input type="file" id="file" accept=".xlsb,.xlsx" hidden>
         </div>
         <div class="row row-store">
@@ -33,14 +41,17 @@
           </label>
         </div>
         <div class="row row2">
-          <button id="run" class="btn btn-primary big wide" data-i18n="generate" disabled>Generate</button>
+          <button id="run" class="btn btn-primary big wide cta" data-i18n="generate" disabled>Generate</button>
         </div>
         <div class="row row3">
           <button id="save" class="btn" data-i18n="save" disabled>Save Report Locally</button>
           <button id="open" class="btn" data-i18n="open" disabled>Open Report</button>
         </div>
         <div class="row row4">
-          <span id="status" class="status"></span>
+          <div id="statusWrap" class="status-wrap hidden">
+            <div class="progress"><div id="progressBar" class="bar"></div></div>
+            <div id="status" class="status-text"></div>
+          </div>
         </div>
       </div>
     </section>
@@ -48,7 +59,6 @@
     <section class="note">
       <p data-i18n="note1">This tool runs fully on your device (client‑only). Select your daily Batch Picking Excel (.xlsb) and tap Generate. The result opens in a new tab as a self‑contained HTML you can save to Files and view in Safari.</p>
       <p class="muted small" data-i18n="note2">First run downloads the Python runtime (~20–30MB). Tap “Preload Runtime” once while online to cache it for offline use.</p>
-      <p class="muted small" data-i18n="note3">Tip: For reliable offline use on iPhone, host this page over HTTPS (for example GitHub Pages). Then tap Preload Runtime once.</p>
     </section>
   </main>
 
