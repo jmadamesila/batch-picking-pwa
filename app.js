@@ -9,13 +9,14 @@ const runBtn = $('#run');
 const storeEl = $('#store');
 const statusEl = $('#status');
 const preloadBtn = $('#preload');
-const openBtn = $('#openReport');
+const openBtn = $('#open');
+const saveBtn = $('#save');
 const langBtn = $('#lang');
 
 let lastBlobUrl = null;
 const I18N = {
   en: {
-    title:'Batch Picking Report — PWA', preload:'Preload Runtime', choose:'Choose Excel', generate:'Generate', open:'Open Report',
+    title:'Batch Picking Report Generator', preload:'Preload Runtime', choose:'Choose Excel', generate:'Generate', open:'Open Report', save:'Save Report Locally',
     ready:'Ready', downloading:'Downloading Python runtime…', installing:'Installing packages…', processing:'Processing…', done:'Done',
     offline:'Offline: runtime not cached. Tap Preload.',
     note1:'This tool runs fully on your device (client‑only). Select your daily Batch Picking Excel (.xlsb) and tap Generate. The result opens in a new tab as a self‑contained HTML you can save to Files and view in Safari.',
@@ -23,7 +24,7 @@ const I18N = {
     note3:'Tip: For reliable offline use on iPhone, host this page over HTTPS (for example GitHub Pages). Then tap Preload Runtime once.'
   },
   ja: {
-    title:'バッチピッキングレポート — PWA', preload:'ランタイムを事前読み込み', choose:'Excel を選択', generate:'レポート作成', open:'レポートを開く',
+    title:'バッチピッキングレポート ジェネレーター', preload:'ランタイムを事前読み込み', choose:'Excel を選択', generate:'レポート作成', open:'レポートを開く', save:'ローカルに保存',
     ready:'準備完了', downloading:'Python ランタイムをダウンロード中…', installing:'パッケージをインストール中…', processing:'処理中…', done:'完了',
     offline:'オフライン：ランタイムが未キャッシュです。「ランタイムを事前読み込み」を押してください。',
     note1:'このツールは端末内のみで動作します（クライアントのみ）。毎日のバッチピッキングExcel（.xlsb）を選択し、「レポート作成」を押してください。Safariで保存・閲覧できる単独HTMLが開きます。',
@@ -42,6 +43,13 @@ function setLang(code){
 
 setLang(localStorage.getItem('bpr_lang')||'en');
 langBtn?.addEventListener('click', ()=>{ const cur=localStorage.getItem('bpr_lang')||'en'; setLang(cur==='en'?'ja':'en'); });
+
+// Theme toggle for landing page
+const themeBtn = document.querySelector('#themeBtn');
+const THEME='site_theme';
+function applyTheme(t){ document.body.classList.toggle('light', t==='light'); localStorage.setItem(THEME,t); if(themeBtn) themeBtn.textContent = t==='light'?'🌙':'☀️'; }
+applyTheme(localStorage.getItem(THEME)||'dark');
+themeBtn?.addEventListener('click',()=> applyTheme(document.body.classList.contains('light')?'dark':'light'));
 
 let pyodide;
 
@@ -89,6 +97,7 @@ fileEl.addEventListener('change', () => {
 preloadBtn?.addEventListener('click', async ()=>{ try{ preloadBtn.disabled=true; await loadPy(true); } finally { preloadBtn.disabled=false; } });
 
 openBtn?.addEventListener('click', ()=>{ if(lastBlobUrl) try{ window.open(lastBlobUrl,'_blank'); }catch(_){ } });
+saveBtn?.addEventListener('click', ()=>{ if(!lastBlobUrl) return; const a=document.createElement('a'); a.href=lastBlobUrl; a.download='batch_report_v8.html'; document.body.appendChild(a); a.click(); a.remove(); });
 
 runBtn.addEventListener('click', async () => {
   if (!fileEl.files?.length) return;
@@ -103,23 +112,15 @@ runBtn.addEventListener('click', async () => {
     const pyResult = await py.runPythonAsync(`process_xlsb(XLSB_BYTES, '${store}')`);
     const html = pyResult.toString ? pyResult.toString() : pyResult;
     try { if (pyBuf && pyBuf.destroy) pyBuf.destroy(); } catch(_){}
-    lastBlobUrl = openHtml(html, f.name.replace(/\.(xlsb|xlsx)$/i,'') + '_report_v8.html');
-    if(openBtn) openBtn.style.display='inline-block';
+    lastBlobUrl = createBlobUrl(html);
+    openBtn.disabled=false; saveBtn.disabled=false;
     status(tr('done'));
   } catch (e){
     console.error(e); alert('Failed: ' + e);
   } finally { runBtn.disabled = false; }
 });
 
-function openHtml(html, name){
-  const blob = new Blob([html], {type:'text/html'});
-  const url = URL.createObjectURL(blob);
-  // Open in new tab and also trigger download (for Files)
-  const a = document.createElement('a');
-  a.href = url; a.download = name; document.body.appendChild(a); a.click(); a.remove();
-  try{ window.open(url, '_blank'); }catch(_){ }
-  return url;
-}
+function createBlobUrl(html){ const blob = new Blob([html], {type:'text/html'}); return URL.createObjectURL(blob); }
 
 // Python code for parsing + rendering v8
 const PY_CODE = `

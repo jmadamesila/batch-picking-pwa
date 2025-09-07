@@ -5,47 +5,60 @@
   <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
   <meta name="theme-color" content="#0b1220">
   <link rel="manifest" href="./manifest.webmanifest">
-  <title>Batch Picking Report — PWA</title>
+  <title>Batch Picking Report Generator — v1</title>
   <link rel="stylesheet" href="./styles.css">
   <script src="./app.js" defer></script>
 </head>
 <body>
   <header class="top">
-    <h1 id="title">Batch Picking Report — PWA</h1>
-    <div class="ctrl">
-      <button id="preload" class="btn btn-primary">⬇︎ <span data-i18n="preload">Preload Runtime</span></button>
-      <label class="btn btn-outline" style="position:relative">
-        <input type="file" id="file" accept=".xlsb,.xlsx" hidden>
-        <span data-i18n="choose">Choose Excel</span>
-      </label>
-      <label class="inp">Store
-        <input type="text" id="store" value="1545" inputmode="numeric" pattern="[0-9]*">
-      </label>
-      <button id="run" class="btn btn-primary" disabled>▶︎ <span data-i18n="generate">Generate</span></button>
-      <button id="openReport" class="btn" style="display:none">🔗 <span data-i18n="open">Open Report</span></button>
-      <span id="status" class="muted"></span>
-      <div style="margin-left:auto;display:flex;align-items:center;gap:8px">
-        <button id="lang" class="btn">日本語</button>
+    <div class="top-inner">
+      <div class="hero-left" style="text-align:center;width:100%">
+        <h1 id="title">Batch Picking Report Generator</h1>
+        <div class="strap">Fast, private, on‑device report builder</div>
       </div>
     </div>
   </header>
 
   <main class="wrap">
+    <section class="card panel glass">
+      <div class="controls">
+        <div class="row row1">
+          <label class="btn btn-outline" for="file" id="chooseBtn" data-i18n="choose">Choose Excel</label>
+          <input type="file" id="file" accept=".xlsb,.xlsx" hidden>
+        </div>
+        <div class="row row-store">
+          <label class="store-line">
+            <span class="store-title">Store</span>
+            <input type="text" id="store" value="1545" inputmode="numeric" pattern="[0-9]*" placeholder="1545">
+          </label>
+        </div>
+        <div class="row row2">
+          <button id="run" class="btn btn-primary big wide" data-i18n="generate" disabled>Generate</button>
+        </div>
+        <div class="row row3">
+          <button id="save" class="btn" data-i18n="save" disabled>Save Report Locally</button>
+          <button id="open" class="btn" data-i18n="open" disabled>Open Report</button>
+        </div>
+        <div class="row row4">
+          <span id="status" class="status"></span>
+        </div>
+      </div>
+    </section>
+
     <section class="note">
-      <p data-i18n="note1">
-        This tool runs fully on your device (client‑only). Select your daily
-        Batch Picking Excel (.xlsb) and tap Generate. The result opens in a new
-        tab as a self‑contained HTML you can save to Files and view in Safari.
-      </p>
-      <p class="muted small" data-i18n="note2">
-        First run downloads the Python runtime (~20–30MB). Tap “Preload Runtime” once while online to cache it for offline use.
-      </p>
-      <p class="muted small" data-i18n="note3">
-        Tip: For reliable offline use on iPhone, host this page over HTTPS (for example GitHub Pages). Then tap Preload Runtime once.
-      </p>
+      <p data-i18n="note1">This tool runs fully on your device (client‑only). Select your daily Batch Picking Excel (.xlsb) and tap Generate. The result opens in a new tab as a self‑contained HTML you can save to Files and view in Safari.</p>
+      <p class="muted small" data-i18n="note2">First run downloads the Python runtime (~20–30MB). Tap “Preload Runtime” once while online to cache it for offline use.</p>
+      <p class="muted small" data-i18n="note3">Tip: For reliable offline use on iPhone, host this page over HTTPS (for example GitHub Pages). Then tap Preload Runtime once.</p>
     </section>
   </main>
 
-  <footer class="foot muted small">Privacy: Files never leave this device. PWA caches locally for offline use.</footer>
+  <section class="preload">
+    <div class="preload-row">
+      <button id="preload" class="btn btn-outline">⬇︎ <span data-i18n="preload">Preload Runtime</span></button>
+      <button id="themeBtn" class="btn btn-ghost" title="Toggle theme">☀️</button>
+      <button id="lang" class="btn btn-ghost">日本語</button>
+    </div>
+  </section>
+  <footer class="foot muted small">Built with PWA · v1</footer>
 </body>
 </html>
